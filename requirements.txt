@@ -1,7 +1,6 @@
 pandas
 numpy
 psycopg2-binary
-pyscopg2
 streamlit
 twilio
 plotly
