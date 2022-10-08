@@ -1,0 +1,7 @@
+pandas
+numpy
+pyscopg2
+streamlit
+twilio
+plotly
+altair
