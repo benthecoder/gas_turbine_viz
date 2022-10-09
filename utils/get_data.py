@@ -7,7 +7,7 @@ import pandas as pd
 
 load_dotenv()
 PASSWORD = os.getenv("COCKROACH_PW")
-URI = f"postgresql://benedict:{PASSWORD}@free-tier14.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full&options=--cluster%3Dshard-oyster-5558"
+URI = f"postgresql://benedict:{PASSWORD}@free-tier14.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb&options=--cluster%3Dshard-oyster-5558"
 
 
 def convert_to_numeric(cols, df):
