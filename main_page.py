@@ -1,3 +1,4 @@
+from turtle import color
 import streamlit as st
 import plotly.express as px
 import os
@@ -34,7 +35,7 @@ def get_data():
 all_df, site_df = get_data()
 
 # group by PLANT_NAME and sum the POWER
-power_df = all_df.groupby(["PLANT_NAME", "datetime"]).sum().reset_index()
+power_df = all_df.groupby(["PLANT_NAME"]).sum().reset_index()
 
 # join the power_df with site_df
 power_df = power_df.merge(site_df, on="PLANT_NAME")
@@ -51,27 +52,22 @@ fig = px.scatter_mapbox(
     lat="LATITUDE",
     lon="LONGITUDE",
     hover_name="CONTINENT",
+    color="CONTINENT",
     hover_data=["CUSTOMER_NAME"],
     width=500,
     height=500,
-    zoom=0,
+    zoom=1.3,
     size="POWER",
 )
 
+
 fig.update_layout(
-    title="Gas Turbine Locations",
-    margin={"r": 0, "t": 50, "l": 0, "b": 0},
+    title="Gas Turbine Locations and CO2 emissions",
+    mapbox_style="open-street-map",
+    margin={"r": 0, "t": 0, "l": 0, "b": 0},
+    showlegend=False,
 )
 
-# fig = px.scatter_geo(
-#     power_df,
-#     lat="LATITUDE",
-#     lon="LONGITUDE",
-#     color="CONTINENT",
-#     hover_name="CUSTOMER_NAME",
-#     size="POWER",
-#     projection="natural earth",
-# )
 
 st.plotly_chart(fig, use_container_width=True)
 
