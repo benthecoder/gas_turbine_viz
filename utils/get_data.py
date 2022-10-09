@@ -29,27 +29,20 @@ def get_data_from_cockroachdb():
 
     with conn.cursor() as cur: 
         cur.execute("SELECT * FROM public.site")
-        print('run here check 1')
-        res = cur.fetchall()
-        print('res', res)
-        conn.commit()
-
-        print('run here check 2')
-        cur.execute("SELECT * FROM public.engine")
         res = cur.fetchall()
         conn.commit()
-        print('run here check 3')
-        all_df = pd.DataFrame.from_records(res)
-
-
         site_df = pd.DataFrame.from_records(res)
 
+        cur.execute("SELECT * FROM public.engine LIMIT 100")
+        res = cur.fetchall()
+        conn.commit()
+        all_df = pd.DataFrame.from_records(res)
+
     # set first row as column names
-    all_df, all_df.columns = all_df[1:], all_df.iloc[0]
+    all_df, all_df.columns = all_df[1:], ["location_id","datetime","CMP_SPEED","POWER","FUEL_FLOW","CO2","CUSTOMER_NAME","PLANT_NAME","ENGINE_ID"]
     site_df, site_df.columns = site_df[1:], site_df.iloc[0]
 
     # convert to numeric
-
     site_cols = [
         "LATITUDE",
         "LONGITUDE",
@@ -59,7 +52,6 @@ def get_data_from_cockroachdb():
         "FUEL_LHV",
         "CO2_FUEL_RATIO",
     ]
-
     site_df = convert_to_numeric(site_cols, site_df)
 
     all_cols = ["CMP_SPEED", "POWER", "FUEL_FLOW", "CO2"]
@@ -73,6 +65,3 @@ def get_data_from_cockroachdb():
     del temp_df
 
     return all_df, site_df
-
-if __name__ == "__main__":
-    get_data_from_cockroachdb()
