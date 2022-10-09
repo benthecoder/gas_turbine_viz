@@ -35,7 +35,9 @@ def send_message(to_phone: str, message: str) -> str:
 
 
 with st.form("subscribe", clear_on_submit=True):
-    st.header("Subscribe, and we'll send you a text message of the latest news!")
+    st.header(
+        "Subscribe, and we'll send you a text message of the latest news Baker Hughes!"
+    )
     name = st.text_input("Enter your name", value="Benedict")
     phone_num = st.text_input("Enter your phone number", value="+1")
     submitted = st.form_submit_button("Submit")

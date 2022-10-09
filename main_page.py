@@ -1,3 +1,4 @@
+from traceback import print_exc
 import streamlit as st
 import plotly.express as px
 import os
@@ -12,6 +13,9 @@ from utils.get_data import get_data_from_cockroachdb
 
 load_dotenv()
 MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
+
+
+st.set_page_config(layout="wide", page_title="Gas Turbine", page_icon="💨")
 
 
 @st.cache
@@ -29,66 +33,144 @@ def get_data():
     return all_df, site_df
 
 
-sample_all_df, sample_site_df = get_data_from_cockroachdb()
-
-
-def home_page():
-    st.markdown("# 💨 Gas Turbine Analysis 💨 ")
-    st.subheader("Analytics and Insights for Gas Turbine Data")
-    st.image("media/turbine.jpeg", width=1000, use_column_width=True)
-    st.markdown(
-        """
-        This dashboard provides an overview of gas turbine data around the world. Some of the main question we aimed to answer are
-        - Which engine is degrading the most?
-        - Which plant has produced more kWh and with what overall efficiency?
-        - Which plant has better availability, or has had the most shutdowns or downtime so we can steer maintenance policies to drive better outcomes in the lowest performers?
-        - Which plants produce more CO2 around the world, by country, by continent?
+st.markdown("# 💨 Gas Turbine Analysis 💨 ")
+st.subheader("Analytics and Insights for Gas Turbine Data")
+st.image("media/turbine.jpeg", width=1000, use_column_width=True)
+st.markdown(
     """
-    )
+    This app provides an overview of gas turbine engine data around the world. 
+    
+    Some of the main question we aimed to answer are:
 
-
-home_page()
-st.subheader("Overview of the Engine Data analysed")
-st.dataframe(data=sample_all_df, use_container_width=True)
-
-st.subheader("Overview of the Site Data analysed")
-st.dataframe(data=sample_site_df, use_container_width=True)
-all_df, site_df = get_data()
-
-# group by PLANT_NAME and sum the POWER
-power_df = all_df.groupby(["PLANT_NAME"]).sum().reset_index()
-# join the power_df with site_df
-power_df = power_df.merge(site_df, on="PLANT_NAME")
-# plot of map
-st.subheader("Global Overview of Power Plants")
-px.set_mapbox_access_token(MAPBOX_TOKEN)
-fig = px.scatter_mapbox(
-    power_df,
-    lat="LATITUDE",
-    lon="LONGITUDE",
-    hover_name="CONTINENT",
-    color="CONTINENT",
-    hover_data=["CUSTOMER_NAME"],
-    width=500,
-    height=500,
-    zoom=1.3,
-    size="POWER",
+    - Which plants produce more CO2 around the world, by country, by continent?
+    - Which plant has produced more kWh and with what overall efficiency?
+    - Which plant has had the most shutdowns or downtime?
+    - Which engine is degrading the most?
+"""
 )
 
 
+st.subheader("The data")
+
+st.caption("data pulled straight from cockroach DB :)")
+
+sample_all_df, sample_site_df = get_data_from_cockroachdb()
+
+with st.expander("See data"):
+    st.dataframe(data=sample_all_df, use_container_width=True)
+    st.dataframe(data=sample_site_df, use_container_width=True)
+
+all_df, site_df = get_data()
+
+
+plant_df = (
+    all_df.groupby(["PLANT_NAME"])
+    .agg(
+        {
+            "CMP_SPEED": "sum",
+            "POWER": "sum",
+            "CO2": "sum",
+            "THRM_EFF": "mean",
+            "FUEL_FLOW": "mean",
+        }
+    )
+    .reset_index()
+)
+
+plant_df = plant_df.merge(site_df, on="PLANT_NAME")
+
+
+cols = [
+    "CMP_SPEED",
+    "POWER",
+    "FUEL_FLOW",
+    "CO2",
+    "THRM_EFF",
+    "FUEL_N2_MOL_PCT",
+    "FUEL_MW",
+    "FUEL_LHV",
+    "CO2_FUEL_RATIO",
+]
+
+size_col = st.sidebar.selectbox("Select a metric", cols, index=0)
+
+continent_df = (
+    plant_df.groupby("CONTINENT")
+    .sum()
+    .reset_index()
+    .sort_values(by=size_col, ascending=True)
+)
+
+country_df = (
+    plant_df.groupby("COUNTRY")
+    .sum()
+    .reset_index()
+    .sort_values(by=size_col, ascending=True)
+    .head(10)
+)
+
+st.subheader(f"Global Overview of `{size_col}` for all Power Plants")
+
+
+# plot of map
+px.set_mapbox_access_token(MAPBOX_TOKEN)
+fig = px.scatter_mapbox(
+    plant_df,
+    lat="LATITUDE",
+    lon="LONGITUDE",
+    hover_name=size_col,
+    hover_data=["COUNTRY"],
+    color="CONTINENT",
+    width=800,
+    height=500,
+    zoom=1,
+    size=size_col,
+)
+
 fig.update_layout(
-    title="Gas Turbine Locations and CO2 emissions",
     mapbox_style="open-street-map",
     margin={"r": 0, "t": 0, "l": 0, "b": 0},
     showlegend=False,
 )
-
-
 st.plotly_chart(fig, use_container_width=True)
 
-st.subheader("Analysis by Each Plant")
-st.text("Select a plant using the selection box below!")
-plant_name = st.selectbox("Select a plant", all_df["PLANT_NAME"].unique(), index=0)
+
+col1, col2 = st.columns(2)
+
+continent_bar = px.bar(
+    continent_df,
+    y="CONTINENT",
+    x=size_col,
+    color="THRM_EFF",
+    title=f"Total {size_col} by Continent",
+)
+
+# remove axis titles
+continent_bar.update_xaxes(title_text="")
+continent_bar.update_yaxes(title_text="")
+
+
+country_bar = px.bar(
+    country_df,
+    y="COUNTRY",
+    x=size_col,
+    color="THRM_EFF",
+    title=f"Total {size_col} by Continent",
+)
+country_bar.update_xaxes(title_text="")
+country_bar.update_yaxes(title_text="")
+
+with col1:
+    st.plotly_chart(continent_bar, use_container_width=True)
+
+with col2:
+    st.plotly_chart(country_bar, use_container_width=True)
+
+
+st.subheader("Analysis of Each Plant")
+plant_name = st.sidebar.selectbox(
+    "Select a plant", all_df["PLANT_NAME"].unique(), index=0
+)
 # filter all_df by plant_name
 all_df_filtered = all_df[all_df["PLANT_NAME"] == plant_name]
 fig = px.line(
@@ -96,10 +178,28 @@ fig = px.line(
     x="datetime",
     y="THRM_EFF",
     color="ENGINE_ID",
-    title="Power over time for each ENGINE_ID",
+    title="Thermal efficiency over time for each ENGINE_ID",
 )
 
 st.plotly_chart(fig, use_container_width=True)
+
+# group by month average thermal efficiency for each engine in all_df_filtered
+engine_df = (
+    all_df_filtered.groupby(["ENGINE_ID", pd.Grouper(key="datetime", freq="M")])
+    .agg({"THRM_EFF": "mean"})
+    .reset_index()
+)
+
+fig = px.line(
+    engine_df,
+    x="datetime",
+    y="THRM_EFF",
+    color="ENGINE_ID",
+    title="Average thermal efficiency over time for each ENGINE_ID",
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
 st.subheader("Downtime and Availability of Plants")
 avail_df = (
     all_df.groupby(["PLANT_NAME", "ENGINE_ID"])[["CMP_SPEED"]]
@@ -107,15 +207,19 @@ avail_df = (
     .reset_index()
 )
 
-avail_df["CMP_SPEED"] = avail_df["CMP_SPEED"] / 7
 avail_df = avail_df.sort_values(by=["CMP_SPEED"], ascending=False)
 
 fig = px.bar(
     x=avail_df["PLANT_NAME"],
     y=avail_df["CMP_SPEED"],
-    text=avail_df["CMP_SPEED"].map("{:,.0f}".format),
-    color=avail_df["PLANT_NAME"],
+    color=avail_df["ENGINE_ID"],
     orientation="v",
+)
+
+# sort by CMP_SPEED
+fig.update_layout(
+    xaxis={"categoryorder": "total descending"},
+    title="Total Downtime for each Plant",
 )
 
 fig.update_xaxes(title_text="Plant Name")
@@ -124,9 +228,9 @@ fig.update_yaxes(title_text="Down Time (Hours)")
 st.plotly_chart(fig, use_container_width=True)
 st.markdown(
     """
-From this plot, we can see that the THERAPEUTIC-LIONFISH plant has the highest downtime among all and that
-corrective measures can be implemented to increase the efficiency of the plant. On the other hand, 
-the SPRITUAL-POLECAT plant has the lowest downtime and can be used as a benchmark for other plants.
+From this plot, we can see that the AQUAMARINE-KANGAROO plant has the highest downtime among all and that corrective measures can be implemented to increase the efficiency of the plant. 
+
+On the other hand, the COBALT-CATFISH plant has the lowest downtime and can be used as a benchmark for other plants.
 """
 )
 
