@@ -16,6 +16,11 @@ MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
 
 @st.cache
 def get_data():
+    # download data from s3
+    all_df = pd.read_csv("https://hackathonfiles123.s3.amazonaws.com/all_data.csv")
+    site_df = pd.read_csv(
+        "https://hackathonfiles123.s3.amazonaws.com/site_metadata.csv"
+    )
     all_df = pd.read_csv("data/all_data.csv")
     site_df = pd.read_csv("data/site_metadata.csv")
     temp_df = all_df.merge(site_df, on=["CUSTOMER_NAME", "PLANT_NAME"])
