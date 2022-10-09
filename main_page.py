@@ -1,4 +1,3 @@
-from turtle import width
 import streamlit as st
 import plotly.express as px
 import os
@@ -25,6 +24,7 @@ fig = px.scatter_mapbox(
     lon="LONGITUDE",
     hover_name="CUSTOMER_NAME",
     hover_data=["CUSTOMER_NAME", "PLANT_NAME", "LATITUDE", "LONGITUDE"],
+    zoom=1,
     width=1000,
     height=1000,
 )
