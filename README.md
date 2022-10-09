@@ -1,12 +1,14 @@
 # Gas Turbine Data Visualization
 
-import into cockroach
+## Cockroach DB ingestion
 
-connect to cockroach
+### connect to cockroach
 
 ```sql
-cockroach sql --url "postgresql://benedict@free-tier14.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full&options=--cluster%3Dshard-oyster-5558"
+cockroach sql --url "postgresql://benedict<PASSWORD>@free-tier14.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full&options=--cluster%3Dshard-oyster-5558"
 ```
+
+### import data from s3 csv files
 
 ```sql
 IMPORT INTO ENGINE(location_id,datetime,CMP_SPEED,POWER, FUEL_FLOW,CO2,CUSTOMER_NAME,PLANT_NAME,ENGINE_ID)
