@@ -16,13 +16,12 @@ MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
 
 @st.cache
 def get_data():
-    # download data from s3
-    all_df = pd.read_csv("https://hackathonfiles123.s3.amazonaws.com/all_data.csv")
+    all_df = pd.read_parquet(
+        "https://hackathonfiles123.s3.amazonaws.com/all_df.parquet"
+    )
     site_df = pd.read_csv(
         "https://hackathonfiles123.s3.amazonaws.com/site_metadata.csv"
     )
-    all_df = pd.read_csv("data/all_data.csv")
-    site_df = pd.read_csv("data/site_metadata.csv")
     temp_df = all_df.merge(site_df, on=["CUSTOMER_NAME", "PLANT_NAME"])
     all_df["THRM_EFF"] = temp_df["POWER"] / (temp_df["FUEL_FLOW"] * temp_df["FUEL_LHV"])
     all_df["datetime"] = pd.to_datetime(all_df["datetime"])
@@ -31,17 +30,6 @@ def get_data():
 
 
 sample_all_df, sample_site_df = get_data_from_cockroachdb()
-
-
-@st.cache
-def get_data():
-    all_df = pd.read_csv("data/all_data.csv")
-    site_df = pd.read_csv("data/site_metadata.csv")
-    temp_df = all_df.merge(site_df, on=["CUSTOMER_NAME", "PLANT_NAME"])
-    all_df["THRM_EFF"] = temp_df["POWER"] / (temp_df["FUEL_FLOW"] * temp_df["FUEL_LHV"])
-    all_df["datetime"] = pd.to_datetime(all_df["datetime"])
-
-    return all_df, site_df
 
 
 def home_page():
