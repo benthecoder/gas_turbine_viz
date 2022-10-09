@@ -7,7 +7,6 @@ import pandas as pd
 
 load_dotenv()
 PASSWORD = os.getenv("COCKROACH_PW")
-URI = f"postgresql://benedict:{PASSWORD}@free-tier14.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full&options=--cluster%3Dshard-oyster-5558"
 
 
 def convert_to_numeric(cols, df):
@@ -18,18 +17,28 @@ def convert_to_numeric(cols, df):
 
 @st.cache
 def get_data_from_cockroachdb():
-    conn = psycopg2.connect(URI)
+    conn = psycopg2.connect(
+        host = 'free-tier14.aws-us-east-1.cockroachlabs.cloud',
+        port = 26257,
+        user = 'benedict',
+        password = PASSWORD,
+        sslmode = 'require',
+        sslrootcert = './root.crt',
+        database = 'defaultdb',
+        options = '--cluster=shard-oyster-5558')
 
     with conn.cursor() as cur: 
         cur.execute("SELECT * FROM public.site")
-        print('run here already 2')
+        print('run here check 1')
         res = cur.fetchall()
+        print('res', res)
         conn.commit()
 
+        print('run here check 2')
         cur.execute("SELECT * FROM public.engine")
         res = cur.fetchall()
         conn.commit()
-        print('run here already')
+        print('run here check 3')
         all_df = pd.DataFrame.from_records(res)
 
 

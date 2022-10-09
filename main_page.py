@@ -17,8 +17,8 @@ MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
 
 st.markdown("# Gas Turbine ")
 
-
-# all_df, site_df = get_data_from_cockroachdb()
+# TODO: Remove if not working
+all_df, site_df = get_data_from_cockroachdb()
 
 
 @st.cache
