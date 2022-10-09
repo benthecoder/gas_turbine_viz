@@ -20,16 +20,18 @@ def convert_to_numeric(cols, df):
 def get_data_from_cockroachdb():
     conn = psycopg2.connect(URI)
 
-    with conn.cursor() as cur:
+    with conn.cursor() as cur: 
+        cur.execute("SELECT * FROM public.site")
+        print('run here already 2')
+        res = cur.fetchall()
+        conn.commit()
+
         cur.execute("SELECT * FROM public.engine")
         res = cur.fetchall()
         conn.commit()
-
+        print('run here already')
         all_df = pd.DataFrame.from_records(res)
 
-        cur.execute("SELECT * FROM public.site")
-        res = cur.fetchall()
-        conn.commit()
 
         site_df = pd.DataFrame.from_records(res)
 
@@ -62,3 +64,6 @@ def get_data_from_cockroachdb():
     del temp_df
 
     return all_df, site_df
+
+if __name__ == "__main__":
+    get_data_from_cockroachdb()
