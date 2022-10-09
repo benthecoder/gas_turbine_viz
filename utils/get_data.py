@@ -18,16 +18,17 @@ def convert_to_numeric(cols, df):
 @st.cache
 def get_data_from_cockroachdb():
     conn = psycopg2.connect(
-        host = 'free-tier14.aws-us-east-1.cockroachlabs.cloud',
-        port = 26257,
-        user = 'benedict',
-        password = PASSWORD,
-        sslmode = 'require',
-        sslrootcert = './root.crt',
-        database = 'defaultdb',
-        options = '--cluster=shard-oyster-5558')
+        host="free-tier14.aws-us-east-1.cockroachlabs.cloud",
+        port=26257,
+        user="benedict",
+        password=PASSWORD,
+        sslmode="require",
+        sslrootcert="./root.crt",
+        database="defaultdb",
+        options="--cluster=shard-oyster-5558",
+    )
 
-    with conn.cursor() as cur: 
+    with conn.cursor() as cur:
         cur.execute("SELECT * FROM public.site")
         res = cur.fetchall()
         conn.commit()
@@ -39,7 +40,17 @@ def get_data_from_cockroachdb():
         all_df = pd.DataFrame.from_records(res)
 
     # set first row as column names
-    all_df, all_df.columns = all_df[1:], ["location_id","datetime","CMP_SPEED","POWER","FUEL_FLOW","CO2","CUSTOMER_NAME","PLANT_NAME","ENGINE_ID"]
+    all_df, all_df.columns = all_df[1:], [
+        "location_id",
+        "datetime",
+        "CMP_SPEED",
+        "POWER",
+        "FUEL_FLOW",
+        "CO2",
+        "CUSTOMER_NAME",
+        "PLANT_NAME",
+        "ENGINE_ID",
+    ]
     site_df, site_df.columns = site_df[1:], site_df.iloc[0]
 
     # convert to numeric
