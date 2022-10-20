@@ -54,11 +54,11 @@ st.subheader("The data")
 
 st.caption("data pulled straight from cockroach DB :)")
 
-sample_all_df, sample_site_df = get_data_from_cockroachdb()
+# sample_all_df, sample_site_df = get_data_from_cockroachdb()
 
-with st.expander("See data"):
-    st.dataframe(data=sample_all_df, use_container_width=True)
-    st.dataframe(data=sample_site_df, use_container_width=True)
+# with st.expander("See data"):
+#    st.dataframe(data=sample_all_df, use_container_width=True)
+#    st.dataframe(data=sample_site_df, use_container_width=True)
 
 all_df, site_df = get_data()
 
